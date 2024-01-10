@@ -55,4 +55,4 @@ COMMAND : internsctl user list --sudo-only
 COMMAND : internsctl file getinfo hello.txt
 <img width="640" alt="Screenshot 2024-01-10 at 3 47 37 PM" src="https://github.com/Shwetaarora2810/internsctl/assets/92294392/616840c3-d0c1-44dd-8496-f77e85dac54a">
 
-COMMAND : 
+
