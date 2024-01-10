@@ -1,0 +1,177 @@
+#!/bin/bash
+
+# Function to display the manual page
+display_manual() {
+    cat << EOF
+Internsctl - Custom Linux Command
+
+Usage: internsctl [options]
+
+Options:
+  --help                Display this help message
+  --version             Display the version of the command
+  cpu getinfo           Get CPU information (similar to lscpu)
+  memory getinfo        Get memory information (similar to free)
+  user create <username> Create a new user with login access and home directory
+  user list             List all regular users
+  user list --sudo-only List users with sudo permissions
+  file getinfo <file>   Get information about a file
+    --size, -s          Print file size
+    --permissions, -p   Print file permissions
+    --owner, -o         Print file owner
+    --last-modified, -m Print last modified time
+
+EOF
+}
+
+# Function to display help
+display_help() {
+    echo "Usage: internsctl [options]"
+    echo
+    echo "Options:"
+    echo "  --help                Display this help message"
+    echo "  --version             Display the version of the command"
+    echo "  cpu getinfo           Get CPU information (similar to lscpu)"
+    echo "  memory getinfo        Get memory information (similar to free)"
+    echo "  user create <username> Create a new user with login access and home directory"
+    echo "  user list             List all regular users"
+    echo "  user list --sudo-only List users with sudo permissions"
+    echo "  file getinfo <file>   Get information about a file"
+    echo "    --size, -s          Print file size"
+    echo "    --permissions, -p   Print file permissions"
+    echo "    --owner, -o         Print file owner"
+    echo "    --last-modified, -m Print last modified time"
+}
+
+# Function to display version
+display_version() {
+    echo "v0.1.0"
+}
+
+# Function to get CPU information
+get_cpu_info() {
+    lscpu
+}
+
+# Function to get memory information
+get_memory_info() {
+    free
+}
+
+# Function to create a new user
+create_user() {
+    if [ -z "$2" ]; then
+        echo "Error: Username not provided. Usage: internsctl user create <username>"
+    else
+        sudo useradd -m -s /bin/bash "$2"
+        echo "User $2 created successfully."
+    fi
+}
+
+# Function to list all regular users
+list_users() {
+    cut -d: -f1 /etc/passwd
+}
+
+# Function to list users with sudo permissions
+list_sudo_users() {
+    grep -Po '^sudo.+:\K.*$' /etc/group | tr ',' '\n'
+}
+
+# Function to get information about a file
+get_file_info() {
+    local file="$2"
+    local size=""
+    local permissions=""
+    local owner=""
+    local last_modified=""
+
+    # Check if file exists
+    if [ ! -e "$file" ]; then
+        echo "Error: File '$file' not found."
+        exit 1
+    fi
+
+    # Check options
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --size | -s)
+                size=$(stat -c %s "$file")
+                ;;
+            --permissions | -p)
+                permissions=$(stat -c %A "$file")
+                ;;
+            --owner | -o)
+                owner=$(stat -c %U "$file")
+                ;;
+            --last-modified | -m)
+                last_modified=$(stat -c %y "$file")
+                ;;
+        esac
+        shift
+    done
+
+    # Print information
+    echo "File: $file Access: $permissions Size(B): $size Owner: $owner Modify: $last_modified"
+}
+
+# Main script logic
+case "$1" in
+    --help)
+        display_help
+        ;;
+    --version)
+        display_version
+        ;;
+    cpu)
+        case "$2" in
+            getinfo)
+                get_cpu_info
+                ;;
+            *)
+                echo "Invalid CPU subcommand. Use 'internsctl cpu getinfo' for CPU information."
+                ;;
+        esac
+        ;;
+    memory)
+        case "$2" in
+            getinfo)
+                get_memory_info
+                ;;
+            *)
+                echo "Invalid memory subcommand. Use 'internsctl memory getinfo' for memory information."
+                ;;
+        esac
+        ;;
+    user)
+        case "$2" in
+            create)
+                create_user "$@"
+                ;;
+            list)
+                if [ "$3" == "--sudo-only" ]; then
+                    list_sudo_users
+                else
+                    list_users
+                fi
+                ;;
+            *)
+                echo "Invalid user subcommand. Use 'internsctl user create <username>', 'internsctl user list', or 'internsctl user list --sudo-only'."
+                ;;
+        esac
+        ;;
+    file)
+        case "$2" in
+            getinfo)
+                shift 2
+                get_file_info "$@"
+                ;;
+            *)
+                echo "Invalid file subcommand. Use 'internsctl file getinfo [options] <file-name>'"
+                ;;
+        esac
+        ;;
+    *)
+        display_manual
+        ;;
+esac
