@@ -115,6 +115,14 @@ get_file_info() {
     echo "File: $file Access: $permissions Size(B): $size Owner: $owner Modify: $last_modified"
 }
 
+// IF I want only specific information then to display with options
+    # Display file information
+    [ -n "$size" ] && echo "Size(B): $size"
+    [ -n "$permissions" ] && echo "Access: $permissions"
+    [ -n "$owner" ] && echo "Owner: $owner"
+    [ -n "$last_modified" ] && echo "Modify: $last_modified"
+}
+
 # Main script logic
 case "$1" in
     --help)
@@ -175,3 +183,8 @@ case "$1" in
         display_manual
         ;;
 esac
+
+
+
+
+
